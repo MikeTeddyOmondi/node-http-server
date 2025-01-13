@@ -1,5 +1,8 @@
-import { drizzle } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+
+const { Pool } = pg;
+
 import {
   DATABASE_HOST,
   DATABASE_NAME,
@@ -7,11 +10,13 @@ import {
   DATABASE_USER,
 } from "../config.js";
 
-const poolConnection = mysql.createPool({
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 3,
   host: DATABASE_HOST,
   user: DATABASE_USER,
   database: DATABASE_NAME,
   password: DATABASE_PASSWORD,
 });
 
-export const db = drizzle(poolConnection);
+export const db = drizzle(pool);

@@ -1,9 +1,8 @@
-// import { config } from "dotenv";
-import mysql from "mysql2/promise";
-import { drizzle } from "drizzle-orm/mysql2";
-import { migrate } from "drizzle-orm/mysql2/migrator";
+import pg from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
 
-// config();
+const { Client } = pg;
 
 import {
   DATABASE_HOST,
@@ -12,15 +11,15 @@ import {
   DATABASE_USER,
 } from "../config.js";
 
-const connection = await mysql.createConnection({
+const connection = new Client({
+  connectionString: process.env.DATABASE_URL,
   host: DATABASE_HOST,
   user: DATABASE_USER,
   database: DATABASE_NAME,
   password: DATABASE_PASSWORD,
-  multipleStatements: true,
 });
 
-export const db = drizzle(connection);
+const db = drizzle(connection);
 
 async function main() {
   try {

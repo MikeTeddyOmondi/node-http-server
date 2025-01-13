@@ -1,0 +1,11 @@
+### All Tasks
+GET http://localhost:3489/tasks
+
+### Add Tasks
+POST http://localhost:3489/tasks
+content-type: application/json
+
+{
+    "title": "baz",
+    "description": "Wed, 21 Oct 2015 18:27:50 GMT"
+}

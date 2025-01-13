@@ -46,7 +46,12 @@ async function main() {
     try {
       const public_id = uuid();
       const { title, description } = req.body;
-      if (title === "" || description === "") {
+      if (
+        title === "" ||
+        title === undefined ||
+        description === "" ||
+        description === undefined
+      ) {
         logger.error(
           "Error creating task(s): Please provide a title & a description"
         );
@@ -56,12 +61,6 @@ async function main() {
         });
       }
 
-      // const result = await db
-      //   .insert(tasks)
-      //   .values({ public_id, title, description })
-      //   .returning()
-      //   .all();
-
       type NewTask = typeof tasks.$inferInsert;
 
       const newTask: NewTask = {
@@ -70,15 +69,15 @@ async function main() {
         title,
       };
 
-      const result = await db.insert(tasks).values(newTask);
+      const [result] = await db.insert(tasks).values(newTask).returning();
 
-      logger.info({ data: result[0] }, "Task(s) created!");
+      logger.info({ data: result }, "Task(s) created!");
       res
         .status(201)
-        .json({ success: true, message: "Task(s) created!", data: result[0] });
+        .json({ success: true, message: "Task(s) created!", data: result });
     } catch (err: any) {
       logger.error(`Error creating task(s): ${err.message}`);
-      next(createError(500, `Error creating task(s): ${err.message}`));
+      next(createError(500, `Error creating task(s): ${err}`));
     }
   });
 
@@ -120,17 +119,17 @@ async function main() {
         });
       }
 
-      const result = await db
+      const [result] = await db
         .update(tasks)
         .set({ title, description })
         .where(eq(tasks.public_id, pid))
-        // .returning();
+        .returning();
 
-      logger.info({ data: result[0] }, `Task(s): ${pid} updated!`);
+      logger.info({ data: result }, `Task(s): ${pid} updated!`);
       res.json({
         success: true,
         message: "Task(s) updated!",
-        data: result[0],
+        data: result,
       });
     } catch (err: any) {
       logger.error(`Error updating task(s): ${err.message}`);
@@ -138,55 +137,55 @@ async function main() {
     }
   });
 
-  // app.put("/tasks/complete/:pid", async (req, res, next) => {
-  //   try {
-  //     const { pid } = req.params;
-  //     const fetchResult = await db
-  //       .select()
-  //       .from(tasks)
-  //       .where(eq(tasks.public_id, pid));
-  //     const result = await db
-  //       .update(tasks)
-  //       .set({ completed: fetchResult[0].completed ? false : true })
-  //       .where(eq(tasks.public_id, pid))
-  //       // .returning();
+  app.put("/tasks/complete/:pid", async (req, res, next) => {
+    try {
+      const { pid } = req.params;
+      const [fetchResult] = await db
+        .select()
+        .from(tasks)
+        .where(eq(tasks.public_id, pid));
+      const result = await db
+        .update(tasks)
+        .set({ completed: fetchResult?.completed ? false : true })
+        .where(eq(tasks.public_id, pid));
+      // .returning();
 
-  //     logger.info(`Task(s): ${pid} completed!`);
-  //     res.json({
-  //       success: true,
-  //       message: "Task(s) completed!",
-  //       data: result[0],
-  //     });
-  //   } catch (err: any) {
-  //     logger.error(`Error completing task(s): ${err.message}`);
-  //     next(createError(500, `Error completing task(s): ${err.message}`));
-  //   }
-  // });
+      logger.info(`Task(s): ${pid} completed!`);
+      res.json({
+        success: true,
+        message: "Task(s) completed!",
+        data: result,
+      });
+    } catch (err: any) {
+      logger.error(`Error completing task(s): ${err.message}`);
+      next(createError(500, `Error completing task(s): ${err.message}`));
+    }
+  });
 
-  // app.delete("/tasks/:pid", async (req, res, next) => {
-  //   try {
-  //     const { pid } = req.params;
-  //     const result = await db
-  //       .delete(tasks)
-  //       .where(eq(tasks.public_id, pid))
-  //       .returning();
-  //     if (result.length === 0) {
-  //       logger.error(`Error deleting task(s): ${pid} not found!`);
-  //       return res.status(404).json({
-  //         success: false,
-  //         message: `Task(s): ${pid} not found!`,
-  //       });
-  //     }
-  //     res.json({
-  //       success: true,
-  //       message: `Task(s): ${pid} deleted!`,
-  //       data: result,
-  //     });
-  //   } catch (err: any) {
-  //     logger.error(`Error deleting task(s): ${err.message}`);
-  //     next(createError(500, `Error deleting task(s): ${err.message}`));
-  //   }
-  // });
+  app.delete("/tasks/:pid", async (req, res, next) => {
+    try {
+      const { pid } = req.params;
+      const result = await db
+        .delete(tasks)
+        .where(eq(tasks.public_id, pid))
+        .returning();
+      if (result.length === 0) {
+        logger.error(`Error deleting task(s): ${pid} not found!`);
+        return res.status(404).json({
+          success: false,
+          message: `Task(s): ${pid} not found!`,
+        });
+      }
+      res.json({
+        success: true,
+        message: `Task(s): ${pid} deleted!`,
+        data: result,
+      });
+    } catch (err: any) {
+      logger.error(`Error deleting task(s): ${err.message}`);
+      next(createError(500, `Error deleting task(s): ${err.message}`));
+    }
+  });
 
   // 404 route
   app.get("*", (req, res, next) => {

@@ -1,33 +1,35 @@
 import {
-  int,
-  mysqlEnum,
-  mysqlTable,
+  integer,
+  pgEnum,
+  pgTable,
   uniqueIndex,
   varchar,
   boolean,
-} from "drizzle-orm/mysql-core";
+  serial,
+} from "drizzle-orm/pg-core";
 
-export const tasks = mysqlTable("tasks", {
-  id: int("id").notNull().primaryKey().unique().autoincrement(),
+export const tasks = pgTable("tasks", {
+  id: serial("id").notNull().primaryKey().unique(),
   public_id: varchar("public_id", { length: 1024 }).notNull(),
   title: varchar("title", { length: 256 }).notNull(),
   description: varchar("description", { length: 512 }).notNull(),
   completed: boolean("completed").notNull().default(false),
 });
 
-export const countries = mysqlTable(
-  "countries",
-  {
-    id: int("id").primaryKey().unique().autoincrement(),
-    name: varchar("name", { length: 256 }),
-  },
-  (countries) => ({
-    nameIndex: uniqueIndex("name_idx").on(countries.name),
-  })
-);
-export const cities = mysqlTable("cities", {
-  id: int("id").primaryKey().unique().autoincrement(),
+export const countries = pgTable("countries", {
+  id: integer("id").primaryKey().unique(),
   name: varchar("name", { length: 256 }),
-  countryId: int("country_id").references(() => countries.id),
-  popularity: mysqlEnum("popularity", ["unknown", "known", "popular"]),
+});
+
+export const popularityEnum = pgEnum("popularity", [
+  "unknown",
+  "known",
+  "popular",
+]);
+
+export const cities = pgTable("cities", {
+  id: integer("id").primaryKey().unique(),
+  name: varchar("name", { length: 256 }),
+  countryId: integer("country_id").references(() => countries.id),
+  popularity: popularityEnum("popularity"),
 });
