@@ -1,11 +1,21 @@
 ### All Tasks
-GET http://localhost:3489/tasks
+GET http://localhost:3489/api/v1/tasks
 
 ### Add Tasks
-POST http://localhost:3489/tasks
+POST http://localhost:3489/api/v1/tasks
 content-type: application/json
 
 {
-    "title": "baz",
+    "title": "foobaz",
     "description": "Wed, 21 Oct 2015 18:27:50 GMT"
 }
+
+### Single Task(s)
+GET http://localhost:3489/api/v1/tasks/4482cc35-1949-44c7-af54-a5c894b7c221
+
+### Complete Task(s)
+PUT http://localhost:3489/api/v1/tasks/complete/4482cc35-1949-44c7-af54-a5c894b7c221
+content-type: application/json
+
+### Delete Task(s)
+DELETE http://localhost:3489/api/v1/tasks/c3a16d56-07a2-45c4-916c-873ac6c92bca
